@@ -1,5 +1,0 @@
-preco
-estoque
-popularidade
-data_cadastro
-nome
