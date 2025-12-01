@@ -38,16 +38,6 @@ class LinkedList:
             current = current.next
         return -1
 
-
-    def to_list(self):
-        out = []
-        cur = self.head
-        while cur:
-            out.append(cur.id)
-            cur = cur.next
-        return out
-
-
 def carregar_ids(caminho):
     with open(caminho, "r") as f:
         return [int(line.strip()) for line in f if line.strip()]
