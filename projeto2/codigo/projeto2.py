@@ -12,6 +12,7 @@ class LinkedList:
     def __init__(self):
         self.head = None
 
+
     def search_sequential(self, target):
         current = self.head
         while current:
@@ -26,17 +27,20 @@ def carregar_ids(caminho):
         return [int(line.strip()) for line in f if line.strip()]
 
 
-def criar_lista_encadeada(ids):
+def criar_lista_encadeada_ordenada(ids):
+    ids.sort()  # O(N log N) ao invés de O(N^2)
+
     lista = LinkedList()
-    current = None
-    for id_val in ids:
-        new_node = Node(id_val)
+    previous = None
+
+    for v in ids:
+        node = Node(v)
         if lista.head is None:
-            lista.head = new_node
-            current = new_node
+            lista.head = node
         else:
-            current.next = new_node
-            current = new_node
+            previous.next = node
+        previous = node
+
     return lista
 
 
@@ -46,22 +50,21 @@ def criar_vetor_indices(lista):
     while current:
         vetor.append((current.id, current))
         current = current.next
-    # o vetor SIM deve estar ordenado
-    vetor.sort(key=lambda x: x[0])
     return vetor
 
 
 def busca_binaria_vetor(vetor, alvo):
     inicio, fim = 0, len(vetor) - 1
+
     while inicio <= fim:
         meio = (inicio + fim) // 2
-        valor = vetor[meio][0]
-        if valor == alvo:
+        if vetor[meio][0] == alvo:
             return 1
-        if alvo < valor:
+        if alvo < vetor[meio][0]:
             fim = meio - 1
         else:
             inicio = meio + 1
+
     return -1
 
 
@@ -70,14 +73,11 @@ class HashTable:
         self.tamanho = tamanho
         self.tabela = [[] for _ in range(tamanho)]
 
-    def funcao_hash(self, id_val):
-        return id_val % self.tamanho
-
     def inserir(self, id_val):
-        self.tabela[self.funcao_hash(id_val)].append(id_val)
+        self.tabela[id_val % self.tamanho].append(id_val)
 
     def buscar(self, id_val):
-        for x in self.tabela[self.funcao_hash(id_val)]:
+        for x in self.tabela[id_val % self.tamanho]:
             if x == id_val:
                 return 1
         return -1
@@ -105,10 +105,10 @@ def tempo_hash(tabela, ids):
 
 
 def gerar_grafico(t1, t2, t3, caminho):
-    plt.figure(figsize=(7,5))
+    plt.figure(figsize=(8,5))
     plt.bar(["Sequencial", "Binária", "Hash"], [t1, t2, t3])
+    plt.ylabel("Tempo (ms)")
     plt.yscale("log")
-    plt.ylabel("Tempo (ms) - escala logarítmica")
     plt.title("Comparação de desempenho - Projeto 2")
     plt.tight_layout()
     plt.savefig(caminho)
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     ids_entrada = carregar_ids(entrada)
     ids_busca = carregar_ids(busca)
 
-    lista = criar_lista_encadeada(ids_entrada)
+    lista = criar_lista_encadeada_ordenada(ids_entrada)
     vetor = criar_vetor_indices(lista)
 
     tabela = HashTable(7000)
