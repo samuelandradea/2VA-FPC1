@@ -1,4 +1,5 @@
 import time
+import os
 from datetime import datetime
 
 def carregar_produtos(arquivo):
@@ -22,14 +23,20 @@ def carregar_produtos(arquivo):
                     }
                     produtos.append(produto)
         
-        print(f"✓ {len(produtos)} produtos carregados com sucesso!")
         return produtos
     except FileNotFoundError:
-        print(f"✗ Erro: Arquivo '{arquivo}' não encontrado!")
+        print(f"Erro: Arquivo '{arquivo}' não encontrado!")
         return []
     except Exception as e:
-        print(f"✗ Erro ao carregar produtos: {e}")
+        print(f"Erro ao carregar produtos: {e}")
         return []
+
+
+def converter_data(data_str):
+    try:
+        return datetime.strptime(data_str, '%Y-%m-%d')
+    except ValueError:
+        return data_str
 
 
 def insertion_sort(lista, criterio):
@@ -38,9 +45,21 @@ def insertion_sort(lista, criterio):
     while i < n:
         chave = lista[i]
         j = i - 1
-        while j >= 0 and lista[j][criterio] > chave[criterio]:
-            lista[j + 1] = lista[j]
-            j = j - 1
+        
+        if criterio == 'data_cadastro':
+            chave_valor = converter_data(chave[criterio])
+            while j >= 0:
+                lista_valor = converter_data(lista[j][criterio])
+                if lista_valor > chave_valor:
+                    lista[j + 1] = lista[j]
+                    j = j - 1
+                else:
+                    break
+        else:
+            while j >= 0 and lista[j][criterio] > chave[criterio]:
+                lista[j + 1] = lista[j]
+                j = j - 1
+        
         lista[j + 1] = chave
         i = i + 1
     return lista
@@ -62,13 +81,25 @@ def merge(esquerda, direita, criterio):
     i = 0
     j = 0
     
-    while i < len(esquerda) and j < len(direita):
-        if esquerda[i][criterio] <= direita[j][criterio]:
-            resultado.append(esquerda[i])
-            i = i + 1
-        else:
-            resultado.append(direita[j])
-            j = j + 1
+    if criterio == 'data_cadastro':
+        while i < len(esquerda) and j < len(direita):
+            esq_valor = converter_data(esquerda[i][criterio])
+            dir_valor = converter_data(direita[j][criterio])
+            
+            if esq_valor <= dir_valor:
+                resultado.append(esquerda[i])
+                i = i + 1
+            else:
+                resultado.append(direita[j])
+                j = j + 1
+    else:
+        while i < len(esquerda) and j < len(direita):
+            if esquerda[i][criterio] <= direita[j][criterio]:
+                resultado.append(esquerda[i])
+                i = i + 1
+            else:
+                resultado.append(direita[j])
+                j = j + 1
     
     resultado.extend(esquerda[i:])
     resultado.extend(direita[j:])
@@ -79,9 +110,9 @@ def merge(esquerda, direita, criterio):
 def ordenar_produtos(lista_produtos, criterio, algoritmo):
     lista_copia = lista_produtos.copy()
     
-    criterios_validos = ['preco', 'estoque', 'popularidade', 'data', 'nome']
+    criterios_validos = ['preco', 'estoque', 'popularidade', 'data_cadastro', 'nome']
     if criterio not in criterios_validos:
-        print(f"✗ Critério inválido: {criterio}")
+        print(f"Critério inválido: {criterio}")
         return lista_copia
     
     campo_ordenacao = 'data_cadastro' if criterio == 'data' else criterio
@@ -91,7 +122,7 @@ def ordenar_produtos(lista_produtos, criterio, algoritmo):
     elif algoritmo == 'intercalacao':
         return merge_sort(lista_copia, campo_ordenacao)
     else:
-        print(f"✗ Algoritmo inválido: {algoritmo}")
+        print(f"Algoritmo inválido: {algoritmo}")
         return lista_copia
 
 
@@ -101,10 +132,9 @@ def salvar_resultado(lista_produtos, arquivo_saida):
             for produto in lista_produtos:
                 linha = f"{produto['id']} | {produto['nome']} | {produto['preco']} | {produto['estoque']} | {produto['popularidade']} | {produto['data_cadastro']}\n"
                 f.write(linha)
-        print(f"✓ Resultado salvo em '{arquivo_saida}'")
         return True
     except Exception as e:
-        print(f"✗ Erro ao salvar resultado: {e}")
+        print(f"Erro ao salvar resultado: {e}")
         return False
 
 
@@ -112,47 +142,52 @@ def carregar_requisicoes(arquivo):
     try:
         with open(arquivo, 'r', encoding='utf-8') as f:
             requisicoes = [linha.strip() for linha in f if linha.strip()]
-        print(f"✓ {len(requisicoes)} requisições carregadas!")
         return requisicoes
     except FileNotFoundError:
-        print(f"✗ Erro: Arquivo '{arquivo}' não encontrado!")
+        print(f"Erro: Arquivo '{arquivo}' não encontrado!")
         return []
 
 
-def executar_testes():
-    print("COMPARAÇÃO DE ALGORITMOS DE ORDENAÇÃO")
-    print()
+def criar_pasta_resultados():
+    diretorio_script = os.path.dirname(os.path.abspath(__file__))
     
-    arquivo_entrada = 'projeto_3_lista_produtos_entrada.txt'
+    pasta = os.path.join(os.path.dirname(diretorio_script), 'resultados')
+    
+    if not os.path.exists(pasta):
+        os.makedirs(pasta)
+    return pasta
+
+
+def executar_testes():
+
+    diretorio_script = os.path.dirname(os.path.abspath(__file__))
+
+    arquivo_entrada = os.path.join(os.path.dirname(diretorio_script), 'dados', 'projeto_3_lista_produtos_entrada.txt')
     produtos = carregar_produtos(arquivo_entrada)
     
     if not produtos:
         print("Não foi possível carregar os produtos. Encerrando...")
         return
     
-    print()
-    
-    arquivo_requisicoes = 'projeto_3_requisicoes_listagem.txt'
+    arquivo_requisicoes = os.path.join(os.path.dirname(diretorio_script), 'dados', 'projeto_3_requisicoes_listagem.txt')
     requisicoes = carregar_requisicoes(arquivo_requisicoes)
     
     if not requisicoes:
         print("Não foi possível carregar as requisições. Encerrando...")
         return
     
-    print()
-    print("EXECUTANDO TESTES")
-    print()
+    
+    pasta_resultados = criar_pasta_resultados()
+    
     
     algoritmos = ['insercao', 'intercalacao']
     tempos = {algo: {crit: 0 for crit in requisicoes} for algo in algoritmos}
     
     for algoritmo in algoritmos:
-        print(f"TESTANDO ALGORITMO: {algoritmo.upper()}")
         
         tempo_total_algoritmo = 0
         
         for criterio in requisicoes:
-            print(f"  Ordenando por: {criterio}... ", end='', flush=True)
             
             inicio = time.time()
             lista_ordenada = ordenar_produtos(produtos, criterio, algoritmo)
@@ -162,17 +197,13 @@ def executar_testes():
             tempos[algoritmo][criterio] = tempo_execucao
             tempo_total_algoritmo = tempo_total_algoritmo + tempo_execucao
             
-            print(f"✓ [{tempo_execucao:.6f}s]")
-            
-            nome_arquivo = f"projeto_3_resultado_{algoritmo}_{criterio}.txt"
+            nome_arquivo = os.path.join(pasta_resultados, f"projeto_3_resultado_{algoritmo}_{criterio}.txt")
             salvar_resultado(lista_ordenada, nome_arquivo)
-        
-        print(f"\n  Tempo total ({algoritmo}): {tempo_total_algoritmo:.6f}s")
     
     print()
-    print("RESUMO DA COMPARAÇÃO")
+    print("COMPARAÇÃO")
     print()
-    print(f"{'Critério':<20} {'Inserção (s)':<15} {'Intercalação (s)':<15} {'Mais Rápido':<15}")
+    print(f"{'Critério':<20} {'Inserção(s)':<15} {'Intercalação(s)':<15} {'Mais Rápido':<15}")
     print("─" * 70)
     
     for criterio in requisicoes:
@@ -192,15 +223,13 @@ def executar_testes():
     if tempo_total_insercao < tempo_total_intercalacao:
         diferenca = tempo_total_intercalacao - tempo_total_insercao
         percentual = (diferenca / tempo_total_intercalacao) * 100
-        print(f"✓ Insertion Sort foi {percentual:.2f}% mais rápido no total!")
+        print(f"Insertion Sort foi {percentual:.2f}% mais rápido no total!")
     else:
         diferenca = tempo_total_insercao - tempo_total_intercalacao
         percentual = (diferenca / tempo_total_insercao) * 100
-        print(f"✓ Merge Sort foi {percentual:.2f}% mais rápido no total!")
+        print(f"Merge Sort foi {percentual:.2f}% mais rápido no total!")
     
     print()
-    print("TESTE CONCLUÍDO COM SUCESSO!")
-
 
 if __name__ == "__main__":
     executar_testes()
