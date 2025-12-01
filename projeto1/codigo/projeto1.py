@@ -87,7 +87,7 @@ def gerar_grafico(tempo_seq, tempo_bin, caminho):
 
 
 def main():
-    base = os.path.dirname(os.path.abspath(__file__))
+    base = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     dados = os.path.join(base, "dados")
     resultados = os.path.join(base, "resultados")
     grafico = os.path.join(base, "grafico")
