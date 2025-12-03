@@ -1,1 +1,0 @@
-esse grafico, diferente do grafico do primeiro projeto, esta em escala logaritmica, para poder melhor visualizar os valores e suas diferencas, isso porque, na escala linear, a diferenca é tao gritante que não é possível visualizar com clareza. A busca binária é cerca de 1700 vezes mais rápida do que a busca sequencial.
